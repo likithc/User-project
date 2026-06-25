@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Directory</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
+        form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 30px; }
+        input, button { padding: 10px; font-size: 16px; }
+        button { background-color: #007BFF; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f4f4f4; }
+    </style>
+</head>
+<body>
+
+    <h2>Add User Information</h2>
+    <form id="userForm">
+        <input type="text" id="name" placeholder="Enter Name" required>
+        <input type="number" id="age" placeholder="Enter Age" required>
+        <button type="submit">Submit to Database</button>
+    </form>
+
+    <h2>Stored Users</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Age</th>
+            </tr>
+        </thead>
+        <tbody id="userTableBody">
+            </tbody>
+    </style>
+
+    <script>
+        // We use relative paths so Nginx can proxy requests cleanly
+        const API_URL = '/api/users';
+
+        // Fetch and display users
+        async function fetchUsers() {
+            try {
+                const res = await fetch(API_URL);
+                const data = await res.json();
+                const tbody = document.getElementById('userTableBody');
+                tbody.innerHTML = '';
+                
+                data.forEach(user => {
+                    const row = `<tr>
+                        <td>${user.id}</td>
+                        <td>${user.name}</td>
+                        <td>${user.age}</td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                });
+            } catch (err) {
+                console.error("Error fetching data:", err);
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('userForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const age = document.getElementById('age').value;
+
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, age })
+                });
+
+                if (res.ok) {
+                    document.getElementById('name').value = '';
+                    document.getElementById('age').value = '';
+                    fetchUsers(); // Refresh list
+                }
+            } catch (err) {
+                console.error("Error saving data:", err);
+            }
+        });
+
+        // Load data on page open
+        fetchUsers();
+    </script>
+</body>
+</html>
